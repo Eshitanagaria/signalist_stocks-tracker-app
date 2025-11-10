@@ -1,25 +1,41 @@
-import Link from "next/link";
-import Image from "next/image";
-import NavItems from "@/components/NavItems";
-import UserDropdown from "@/components/UserDropdown";
-import {searchStocks} from "@/lib/actions/finnhub.actions";
+'use client'
 
-const Header = async ({ user }: { user: User }) => {
-    const initialStocks = await searchStocks();
+import {NAV_ITEMS} from "@/lib/constants";
+import Link from "next/link";
+import {usePathname} from "next/navigation";
+import SearchCommand from "@/components/SearchCommand";
+
+const NavItems = ({initialStocks}: { initialStocks: StockWithWatchlistStatus[]}) => {
+    const pathname = usePathname()
+
+    const isActive = (path: string) => {
+        if (path === '/') return pathname === '/';
+
+        return pathname.startsWith(path);
+    }
 
     return (
-        <header className="sticky top-0 header">
-            <div className="container header-wrapper">
-                <Link href="/">
-                    <Image src="/assets/icons/logo.svg" alt="Signalist logo" width={140} height={32} className="h-8 w-auto cursor-pointer" />
-                </Link>
-                <nav className="hidden sm:block">
-                    <NavItems initialStocks={initialStocks} />
-                </nav>
+        <ul className="flex flex-col sm:flex-row p-2 gap-3 sm:gap-10 font-medium">
+            {NAV_ITEMS.map(({ href, label }) => {
+                if(href === '/search') return (
+                    <li key="search-trigger">
+                        <SearchCommand
+                            renderAs="text"
+                            label="Search"
+                            initialStocks={initialStocks}
+                        />
+                    </li>
+                )
 
-                <UserDropdown user={user} initialStocks={initialStocks} />
-            </div>
-        </header>
+                return <li key={href}>
+                    <Link href={href} className={`hover:text-yellow-500 transition-colors ${
+                        isActive(href) ? 'text-gray-100' : ''
+                    }`}>
+                        {label}
+                    </Link>
+                </li>
+            })}
+        </ul>
     )
 }
-export default Header
+export default NavItems
